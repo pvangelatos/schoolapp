@@ -12,6 +12,8 @@ import gr.aueb.cf.schoolapp.repository.TeacherRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +30,8 @@ public class TeacherService implements ITeacherService{
 //    public TeacherService(TeacherRepository teacherRepository, RegionRepository regionRepository) {
 //        this.teacherRepository = teacherRepository;
 //        this.regionRepository = regionRepository;
+
+
 //    }
 
     @Override
@@ -56,7 +60,17 @@ public class TeacherService implements ITeacherService{
         }
     }
 
+    @Override
+    @Transactional(readOnly = true)
     public boolean isTeacherExists(String vat) {
         return teacherRepository.findByVat(vat).isPresent();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<TeacherReadOnlyDTO> getPaginatedTeachers(Pageable pageable) {
+        Page<Teacher> teachersPage = teacherRepository.findAll(pageable);
+        log.debug("Get pagianted returned succesfully page={} and size={}", teachersPage.getNumber(), teachersPage.getSize());
+        return teachersPage.map(mapper::mapToTeacherReadOnlyDTO);
     }
 }
