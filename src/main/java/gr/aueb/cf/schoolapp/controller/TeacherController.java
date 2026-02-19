@@ -10,6 +10,7 @@ import gr.aueb.cf.schoolapp.dto.TeacherInsertDTO;
 import gr.aueb.cf.schoolapp.dto.TeacherReadOnlyDTO;
 import gr.aueb.cf.schoolapp.service.IRegionService;
 import gr.aueb.cf.schoolapp.service.ITeacherService;
+import gr.aueb.cf.schoolapp.validator.TeacherEditValidator;
 import gr.aueb.cf.schoolapp.validator.TeacherInsertValidator;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -38,6 +39,7 @@ public class TeacherController {
     private final ITeacherService teacherService;
     private final IRegionService regionService;
     private final TeacherInsertValidator teacherInsertValidator;
+    private final TeacherEditValidator teacherEditValidator;
 
 //    @Autowired
 //    public TeacherController(ITeacherService teacherService) {
@@ -119,17 +121,18 @@ public class TeacherController {
         return "teacher-edit";
     }
 
-    @PostMapping("/edit/")
+    @PostMapping("/edit")
     public String updateTeacher(@Valid @ModelAttribute("teacherEditDTO") TeacherEditDTO teacherEditDTO,
                                 BindingResult bindingResult,  RedirectAttributes redirectAttributes, Model model) {
 
+        teacherEditValidator.validate(teacherEditDTO, bindingResult);
         if (bindingResult.hasErrors()) {
             return "teahcer-edit";
         }
 
         try{
-            teacherService.updateTeacher(teacherEditDTO);
-            redirectAttributes.addFlashAttribute("teacherReadOnlyDTO", teacherEditDTO);
+            TeacherReadOnlyDTO readOnlyDTO = teacherService.updateTeacher(teacherEditDTO);
+            redirectAttributes.addFlashAttribute("teacherReadOnlyDTO", readOnlyDTO);
             return "redirect:/teachers/update-success";
 
         } catch (EntityNotFoundException | EntityAlreadyExistsException | EntityInvalidArgumentException e) {
