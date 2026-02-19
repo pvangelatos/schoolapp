@@ -75,9 +75,17 @@ public class TeacherService implements ITeacherService{
     @Transactional(readOnly = true)
     public Page<TeacherReadOnlyDTO> getPaginatedTeachers(Pageable pageable) {
         Page<Teacher> teachersPage = teacherRepository.findAll(pageable);
-        log.debug("Get pagianted returned succesfully page={} and size={}", teachersPage.getNumber(), teachersPage.getSize());
+        log.debug("Get paginated returned successfully page={} and size={}", teachersPage.getNumber(), teachersPage.getSize());
         return teachersPage.map(mapper::mapToTeacherReadOnlyDTO);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<TeacherReadOnlyDTO> getPaginatedTeachersDeletedFalse(Pageable pageable) {
+        Page<Teacher> teachersPage = teacherRepository.findAllByDeletedFalse(pageable);
+        log.debug("Get paginated not deleted returned successfully page={} and size={}", teachersPage.getNumber(), teachersPage.getSize());
+        return teachersPage.map(mapper::mapToTeacherReadOnlyDTO);
+         }
 
     @Override
     @Transactional(rollbackFor = {EntityNotFoundException.class, EntityAlreadyExistsException.class, EntityInvalidArgumentException.class})
@@ -116,6 +124,24 @@ public class TeacherService implements ITeacherService{
             throw e;
         } catch (EntityInvalidArgumentException e) {
             log.error("Update failed for teacher with uuid={}. Region id={} invalid", dto.uuid(), dto.regionId(), e);
+            throw e;
+        }
+    }
+
+    @Override
+    @Transactional(rollbackFor = EntityNotFoundException.class)
+        public TeacherReadOnlyDTO deleteTeacherByUUID(UUID uuid) throws EntityNotFoundException {
+        try{
+            Teacher teacher = teacherRepository.findByUuidAndDeletedFalse(uuid)
+                    .orElseThrow(() -> new EntityNotFoundException("Teacher with uuid=" + uuid + " not found"));
+
+            teacher.softDelete();
+//            teacherRepository.save(teacher);
+            log.info("Teacher with uuid={} deleted successfully", uuid);
+            return mapper.mapToTeacherReadOnlyDTO(teacher);
+        } catch (EntityNotFoundException e) {
+            log.error("Update failed for teacher with uuid={}. Teacher not found", uuid, e);
+            // Automatic rollback due to @Transactional annotation
             throw e;
         }
     }

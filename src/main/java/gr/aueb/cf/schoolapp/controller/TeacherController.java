@@ -91,7 +91,8 @@ public class TeacherController {
     public String getPaginatedTeachers(@PageableDefault(page = 0, size = 5, sort = "lastname") Pageable pageable,
                                        Model model) {
 
-        Page<TeacherReadOnlyDTO> teachersPage = teacherService.getPaginatedTeachers(pageable);
+//        Page<TeacherReadOnlyDTO> teachersPage = teacherService.getPaginatedTeachers(pageable);
+        Page<TeacherReadOnlyDTO> teachersPage = teacherService.getPaginatedTeachersDeletedFalse(pageable);
 //        Page<TeacherReadOnlyDTO> teachersPage = new PageImpl<>(Stream.of(
 //                new TeacherReadOnlyDTO("ab123", "Pavlos", "Pavlopoulos", "1234", "Athens"),
 //                new TeacherReadOnlyDTO("ab124", "Nikos", "Cahros", "1234", "Athens"),
@@ -127,7 +128,7 @@ public class TeacherController {
 
         teacherEditValidator.validate(teacherEditDTO, bindingResult);
         if (bindingResult.hasErrors()) {
-            return "teahcer-edit";
+            return "teacher-edit";
         }
 
         try{
@@ -141,13 +142,31 @@ public class TeacherController {
         }
     }
 
-    @GetMapping("/update-succes")
-    public String updateSuccess() {
+    @GetMapping("/update-success")
+    public String updateSuccess(Model model) {
         return "update-teacher-success";
     }
 
     @GetMapping("/success")
     public String teacherSuccess(Model model) {
         return "teacher-success";
+    }
+
+    @PostMapping("/delete/{uuid}")
+    public String deleteTeacher(@PathVariable UUID uuid, Model model, RedirectAttributes redirectAttributes) {
+
+        try {
+            TeacherReadOnlyDTO readOnlyDTO = teacherService.deleteTeacherByUUID(uuid);
+            redirectAttributes.addFlashAttribute("teacherReadOnlyDTO", readOnlyDTO);
+            return "redirect:/teachers/delete-success";
+        } catch (EntityNotFoundException e) {
+            model.addAttribute("errorMessage", e.getMessage());
+            return "teachers";
+        }
+    }
+
+    @GetMapping("/delete-success")
+    public String deleteSuccess() {
+        return "delete-teacher-success";
     }
 }
