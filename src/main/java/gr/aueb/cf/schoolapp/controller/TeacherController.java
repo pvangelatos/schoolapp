@@ -113,8 +113,9 @@ public class TeacherController {
     public String getTeacherEdit(@PathVariable UUID uuid, Model model) {
 
         try {
-            TeacherEditDTO teacherEditDTO = teacherService.getTeacherByUuid(uuid);
-            model.addAttribute("teacherEditDTO", teacherEditDTO);
+//            TeacherEditDTO teacherEditDTO = teacherService.getTeacherByUuid(uuid);
+            TeacherEditDTO teacherEditDTO = teacherService.getTeacherByUuidDeletedFalse(uuid);
+              model.addAttribute("teacherEditDTO", teacherEditDTO);
 
         } catch (EntityNotFoundException e) {
            model.addAttribute("errorMessage", e.getMessage());
